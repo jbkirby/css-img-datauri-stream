@@ -1,6 +1,6 @@
 {
   "name": "css-img-datauri-stream",
-  "version": "0.1",
+  "version": "0.1.0",
   "description": "Transforms CSS image references to inline data URIs",
   "main": "index.js",
   "scripts": {
@@ -21,6 +21,8 @@
   },
   "homepage": "https://github.com/jbkirby/css-img-datauri-stream",
   "dependencies": {
-    "through": "~2.3.4"
+    "through": "~2.3.4",
+    "async": "~0.9.0",
+    "mime": "~1.2.11"
   }
 }
