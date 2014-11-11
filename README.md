@@ -7,6 +7,7 @@ The opts argument object may contain the following:
 * `maxImageSize` : size (in bytes) beyond which local images references will not be converted to data URIs.
 
 Can be used as a [parcelify](https://github.com/rotundasoftware/parcelify) transform.
+
 Draws heavily from [Grunt Image Embed](https://github.com/ehynds/grunt-image-embed/blob/master/README.md) by [Eric Hynds](https://github.com/ehynds).
 
 #Usage
