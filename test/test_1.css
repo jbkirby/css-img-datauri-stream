@@ -1,9 +1,4 @@
-body {
+.local {
  	/* local images */
-	background-image: url('images/bucket.jpg');
-	foreground-image: url('http://google.com/images/bucket.jpg');
-}
-
-p {
-	background-image: url('images/bucket.jpg');
+	background-image: url("images/bucket.jpg");
 }
