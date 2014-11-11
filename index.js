@@ -9,7 +9,6 @@
 
 var through = require("through");
 var path = require("path");
-var async = require("async");
 var fs = require("fs");
 var mime = require("mime");
 var _ = require("underscore");
