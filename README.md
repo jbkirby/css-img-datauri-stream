@@ -8,7 +8,7 @@ The opts argument object may contain the following:
 
 Can be used as a [parcelify](https://github.com/rotundasoftware/parcelify) transform.
 
-#usage
+#Usage
 ### css-img-datauri-stream(file [, opts])
 * `file` - the CSS file to transform
 * `opts` - optional options object specifying a byte size beyond which local images references will not be converted to data URIs.
