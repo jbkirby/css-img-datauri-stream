@@ -13,4 +13,4 @@ Draws heavily from [Grunt Image Embed](https://github.com/ehynds/grunt-image-emb
 #Usage
 ### css-img-datauri-stream(file [, opts])
 * `file` - the CSS file to transform
-* `opts` - optional options object specifying a byte size beyond which local images references will not be converted to data URIs.
+* `opts` - optional object whose 'maxImageSize' member specifies a byte size beyond which local image references will not be converted to data URIs.
