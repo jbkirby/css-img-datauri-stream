@@ -4,4 +4,6 @@ var path = require('path');
 var fs = require('fs');
 
 var inputFile = path.join( __dirname, "test_1.css" );
-fs.createReadStream( inputFile ).pipe( imgToDataUri( inputFile, {} ) ).pipe( process.stdout );
+fs.createReadStream(inputFile)
+	.pipe(imgToDataUri(inputFile, { maxImageSize: 32768 }))
+	.pipe(process.stdout);

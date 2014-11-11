@@ -1,5 +1,8 @@
 /**
  * Transform image URL references into inline data URIs.
+ *
+ * Based largely on "Grunt Image Embed" by Eric Hynds.
+ *   https://github.com/ehynds/grunt-image-embed
  */
 
 /*jslint node: true */
@@ -9,9 +12,13 @@ var path = require("path");
 var async = require("async");
 var fs = require("fs");
 var mime = require("mime");
+var _ = require("underscore");
 
 module.exports = function(filePath, opts) {
+  "use strict";
+  // Holds data written to the wrapper through stream.
   var data = "";
+
   // Cache regex's
   var rImages = /([\s\S]*?)(url\(([^)]+)\))(?![^;]*;\s*\/\*\s*ImageEmbed:skip\s*\*\/)|([\s\S]+)/img;
   var rExternal = /^(http|https|\/\/)/;
@@ -22,15 +29,20 @@ module.exports = function(filePath, opts) {
 
   /**
    * [transformCss description]
+   * @param  {[type]} cssFilePath [description]
    * @param  {[type]} cssContents [description]
    * @param  {[type]} opts        [description]
    * @return {[type]}             [description]
    */
-  var transformCss = function(cssPath, cssContents, opts) {
+  var transformCss = function(cssFilePath, cssContents, opts) {
     var result = "";
-    var match, imgUrl, line, tasks, group;
 
-    for(var group = rImages.exec(cssContents); group != null; group = rImages.exec(cssContents)) {
+    // If no max image size is specified in the parameter opts object, default to the IE8 limit.
+    opts = _.extend({
+      maxImageSize: 32768
+    }, opts);
+
+    for(var group = rImages.exec(cssContents); group !== null; group = rImages.exec(cssContents)) {
       // if there is another url to be processed, then:
       //    group[1] will hold everything up to the url declaration
       //    group[2] will hold the complete url declaration (useful if no encoding will take place)
@@ -40,117 +52,115 @@ module.exports = function(filePath, opts) {
       //    group[4] will hold the entire string
       if(group[4] == null) {
         result += group[1];
-
-        imgUrl = group[3].trim()
-          .replace(rQuotes, "")
-          .replace(rParams, ""); // remove query string/hash parmams in the filename, like foo.png?bar or foo.png#bar
-
-        // see if this img was already processed before...
-        if(cache[imgUrl]) {
-          console.log("The image " + imgUrl + " has already been encoded elsewhere in the stylesheet.");
-          result = result += cache[imgUrl];
-          continue;
-        } else {
-          // process it and put it into the cache
-          var loc = imgUrl;
-          var isLocalFile = !rData.test(imgUrl) && !rExternal.test(imgUrl);
-
-          // Resolve the image path relative to the CSS file
-          if(!isLocalFile) {
-            console.log("It's a remote file. Skip.");
-            result += group[2];
-            continue;
-          } else {
-            console.log("It's a local file...");
-            // local file system.. fix up the path
-            loc = imgUrl.charAt(0) === "/" ?
-              loc :
-              path.join(path.dirname(cssPath),  /*(opts.baseDir || "") + */imgUrl);
-
-            // If that didn't work, try finding the image relative to
-            // the current file instead.
-            if(!fs.existsSync(loc)) {
-              loc = path.resolve(__dirname + imgUrl);
-            }
-          }
-
-          var encodedImg = convertImage(loc);
-          if(encodedImg != null) {
-            var url = "url(" + encodedImg + ")";
-            result += url;
-            cache[imgUrl] = url;
-          } else {
-            result += group[2];
-          }
-
-          continue;
-        }
+        result += generateImageString(cssFilePath, group[2], group[3]);
       } else {
         result += group[4];
-        continue;
       }
     }
     return result;
-  }
+  };
+
+/**
+ * [generateImageString description]
+ * @param  {[type]} cssFilePath [description]
+ * @param  {[type]} fullUrl     [description]
+ * @param  {[type]} imageUrl    [description]
+ * @return {[type]}             [description]
+ */
+  var generateImageString = function(cssFilePath, fullUrl, imageUrl) {
+    imageUrl = imageUrl.trim()
+      .replace(rQuotes, "")
+      .replace(rParams, ""); // remove query string/hash parmams in the filename, like foo.png?bar or foo.png#bar
+
+    // See if this image was already processed before...
+    if(cache[imageUrl]) {
+      // If we already processed this image, just pull it from the cache.
+      console.log("The image " + imageUrl + " has already been encoded elsewhere in the stylesheet.");
+      return cache[imageUrl];
+    } else {
+      // If this is a novel image, encode it as a data URI string and then cache it.
+      var loc = imageUrl;
+      var isLocalFile = !rData.test(imageUrl) && !rExternal.test(imageUrl);
+
+      if(!isLocalFile) {
+        // Ignore non-local image references.
+        return fullUrl;
+      } else {
+        // local file system.. fix up the path
+        loc = imageUrl.charAt(0) === "/" ?
+          loc :
+          path.join(path.dirname(cssFilePath), imageUrl);
+
+        // If that didn't work, try finding the image relative to
+        // the current file instead.
+        if(!fs.existsSync(loc)) {
+          loc = path.resolve(__dirname + imageUrl);
+        }
+      }
+
+      var encodedImage = getDataURI(loc);
+
+      // If the encoded image meets the criteria for maximum image size, return its data URI.
+      // Otherwise, just return the original image reference.
+      if(encodedImage != null) {
+        if(encodedImage.length <= opts.maxImageSize) {
+          var url = "url(" + encodedImage + ")";
+          cache[imageUrl] = url;
+
+          return url;
+        } else {
+          console.log("The image " + imageUrl + " exceeds the specified maximum data URI size of " + opts.maxImageSize + ", so will not be converted.");
+        }
+      }
+
+      // If the image exceeds the maximum data URI size (or otherwise failed to encode),
+      // fall back on the original URL reference.
+      return fullUrl;
+    }
+  };
 
   /**
-   * [convertImage description]
-   * @param  {[type]} imgPath  [description]
-   * @param  {[type]} response [description]
-   * @return {[type]}          [description]
+   * Given the path for an image in the local file system, returns a data URI string
+   * representing the data in that image file.
    */
-  var convertImage = function(imgPath) {
-    // Read the file in and convert it.
-    var imgFile = fs.readFileSync(imgPath);
-    var type = mime.lookup(imgPath);
-    return getDataURI(type, imgFile);
-  }
-
-  /**
-   * Private
-   * @param  {[type]} mimeType [description]
-   * @param  {[type]} img      [description]
-   * @return {[type]}          [description]
-   */
-  var getDataURI = function(mimeType, imgFile) {
+  var getDataURI = function(localImagePath) {
+        // Read the file in and convert it.
+      var imageFile = fs.readFileSync(localImagePath);
+      var mimeType = mime.lookup(localImagePath);
       var ret = "data:";
       ret += mimeType;
       ret += ";base64,";
-      ret += imgFile.toString("base64");
+      ret += imageFile.toString("base64");
       return ret;
-  }
+  };
 
+  /**
+   * Module creation entry point. Aggregates all data from the incoming through stream
+   * (which will represent the contents of a file) then processes the result to replace
+   * local image references that meet maximum size requirements with data URIs.
+   */
   if(filePath !== undefined && path.extname(filePath) !== ".css" )
     return through();
   else
     return through(write, end);
 
   /**
-   * [write description]
-   * @param  {[type]} buf [description]
-   * @return {[type]}     [description]
+   * Implementation of through interface.
    */
   function write(buf) {
     data += buf;
-  }
+  };
 
   /**
-   * [end description]
-   * @return {[type]} [description]
+   * Implementation of through interface.
    */
   function end() {
     try {
-      this.queue(transformCss(filePath, data, {}));
-    } catch( err ) {
+      this.queue(transformCss(filePath, data, opts));
+    } catch(err) {
       this.emit("error", new Error(err));
     }
 
-    this.queue( null );
+    this.queue(null);
   }
-}
-
-// var test = function() {
-//   transformCss('test/test_1.css');
-// }
-
-// test();
+};
