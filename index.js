@@ -138,7 +138,7 @@ module.exports = function(filePath, opts) {
    * (which will represent the contents of a file) then processes the result to replace
    * local image references that meet maximum size requirements with data URIs.
    */
-  if(filePath !== undefined && path.extname(filePath) !== ".css" )
+  if(filePath !== undefined && [ ".css", ".scss", ".less" ].indexOf( path.extname(filePath) ) === -1 )
     return through();
   else
     return through(write, end);
