@@ -26,6 +26,10 @@ module.exports = function(filePath, opts) {
   var rParams = /([?#].*)$/g;
   var cache = {};
 
+  opts = _.extend({
+    maxImageSize: 32768
+  }, opts);
+
   /**
    * [transformCss description]
    * @param  {[type]} cssFilePath [description]
@@ -35,11 +39,6 @@ module.exports = function(filePath, opts) {
    */
   var transformCss = function(cssFilePath, cssContents, opts) {
     var result = "";
-
-    // If no max image size is specified in the parameter opts object, default to the IE8 limit.
-    opts = _.extend({
-      maxImageSize: 32768
-    }, opts);
 
     for(var group = rImages.exec(cssContents); group !== null; group = rImages.exec(cssContents)) {
       // if there is another url to be processed, then:
