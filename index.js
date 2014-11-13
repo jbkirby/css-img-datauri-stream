@@ -33,13 +33,13 @@ module.exports = function(filePath, opts) {
    * @param  {[type]} opts        [description]
    * @return {[type]}             [description]
    */
-  var transformCss = function(cssFilePath, cssContents, opts) {
+  var transformCss = function(cssFilePath, cssContents, options) {
     var result = "";
 
     // If no max image size is specified in the parameter opts object, default to the IE8 limit.
-    opts = _.extend({
+    options = _.extend({
       maxImageSize: 32768
-    }, opts);
+    }, options);
 
     for(var group = rImages.exec(cssContents); group !== null; group = rImages.exec(cssContents)) {
       // if there is another url to be processed, then:
@@ -51,7 +51,7 @@ module.exports = function(filePath, opts) {
       //    group[4] will hold the entire string
       if(group[4] == null) {
         result += group[1];
-        result += generateImageString(cssFilePath, group[2], group[3], opts);
+        result += generateImageString(cssFilePath, group[2], group[3], options);
       } else {
         result += group[4];
       }
@@ -66,7 +66,7 @@ module.exports = function(filePath, opts) {
  * @param  {[type]} imageUrl    [description]
  * @return {[type]}             [description]
  */
-  var generateImageString = function(cssFilePath, fullUrl, imageUrl, opts) {
+  var generateImageString = function(cssFilePath, fullUrl, imageUrl, options) {
     imageUrl = imageUrl.trim()
       .replace(rQuotes, "")
       .replace(rParams, ""); // remove query string/hash parmams in the filename, like foo.png?bar or foo.png#bar
@@ -102,7 +102,7 @@ module.exports = function(filePath, opts) {
       // If the encoded image meets the criteria for maximum image size, return its data URI.
       // Otherwise, just return the original image reference.
       if(encodedImage != null) {
-        if(opts.maxImageSize === undefined || encodedImage.length <= opts.maxImageSize) {
+        if(options.maxImageSize === undefined || encodedImage.length <= options.maxImageSize) {
           var url = "url(" + encodedImage + ")";
           cache[imageUrl] = url;
 
