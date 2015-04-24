@@ -108,7 +108,7 @@ module.exports = function(filePath, opts) {
 
           return url;
         } else {
-          console.log("The image " + imageUrl + " exceeds the specified maximum data URI size of " + opts.maxImageSize + ", so will not be converted.");
+          console.log("The image " + imageUrl + " exceeds the specified maximum data URI size of " + options.maxImageSize + ", so will not be converted.");
         }
       }
 
