@@ -5,8 +5,6 @@
  *   https://github.com/ehynds/grunt-image-embed
  */
 
-/*jslint node: true */
-
 var through = require("through");
 var path = require("path");
 var fs = require("fs");
@@ -26,13 +24,6 @@ module.exports = function(filePath, opts) {
   var rParams = /([?#].*)$/g;
   var cache = {};
 
-  /**
-   * [transformCss description]
-   * @param  {[type]} cssFilePath [description]
-   * @param  {[type]} cssContents [description]
-   * @param  {[type]} opts        [description]
-   * @return {[type]}             [description]
-   */
   var transformCss = function(cssFilePath, cssContents, options) {
     var result = "";
 
@@ -74,7 +65,6 @@ module.exports = function(filePath, opts) {
     // See if this image was already processed before...
     if(cache[imageUrl]) {
       // If we already processed this image, just pull it from the cache.
-      console.log("The image " + imageUrl + " has already been encoded elsewhere in the stylesheet.");
       return cache[imageUrl];
     } else {
       // If this is a novel image, encode it as a data URI string and then cache it.
