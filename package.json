@@ -1,6 +1,6 @@
 {
   "name": "css-img-datauri-stream",
-  "version": "0.1.2",
+  "version": "0.1.4",
   "description": "Transforms CSS image references to inline data URIs",
   "main": "index.js",
   "scripts": {
