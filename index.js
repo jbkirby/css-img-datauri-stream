@@ -93,7 +93,7 @@ module.exports = function(filePath, opts) {
       // Otherwise, just return the original image reference.
       if(encodedImage != null) {
         if(options.maxImageSize === undefined || encodedImage.length <= options.maxImageSize) {
-          var url = "url(" + encodedImage + ")";
+          var url = 'url("' + encodedImage + '")';
           cache[imageUrl] = url;
 
           return url;
